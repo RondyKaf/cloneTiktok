@@ -58,8 +58,10 @@ class LoginScreen extends StatelessWidget {
                 ),
                 InkWell(
                   onTap: () {
-                    print("login");
 
+                    authController.loginUser(_emailController.text, _passwordController.text);
+
+                    print("login");
                     _emailController.text = '';
                     _passwordController.text = '';
 

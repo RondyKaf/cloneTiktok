@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:clonetiktok/constant.dart';
@@ -7,11 +8,32 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../views/home_screen.dart';
+import '../views/screens/auth/login_screen.dart';
+
 class AuthController extends GetxController {
   static AuthController instance = Get.find();
-
+  late Rx<User?> user;
   late Rx<File?> _pickedImage;
+
   File? get profilePhoto => _pickedImage.value;
+
+  @override
+  void onReady() {
+    super.onReady();
+    user = Rx<User?> (firebaseAuth.currentUser);
+    user.bindStream(firebaseAuth.authStateChanges());
+    ever(user, setInitialeScreem);
+  }
+
+  setInitialeScreem(User? user){
+    if(user == null){
+      Get.offAll(()=>LoginScreen());
+    }else{
+      Get.offAll(()=>const HomeScreen());
+    }
+  }
+
   void pickImage() async {
     final pickedImage =
         await ImagePicker().pickImage(source: ImageSource.gallery);
@@ -39,10 +61,11 @@ class AuthController extends GetxController {
   void registerUser(
       String username, String email, String password, File? image) async {
     try {
-      if (username.isEmpty &&
-          email.isEmpty &&
-          password.isEmpty &&
+      if (username.isNotEmpty &&
+          email.isNotEmpty &&
+          password.isNotEmpty &&
           image != null) {
+
         //save out user to our ath and firebase  firestore
         UserCredential cred = await firebaseAuth.createUserWithEmailAndPassword(
             email: email, password: password);
@@ -52,10 +75,7 @@ class AuthController extends GetxController {
             email: email,
             uid: cred.user!.uid,
             profilePhoto: downoadUrl);
-        await firebaseFirestore
-            .collection("users")
-            .doc(cred.user!.uid)
-            .set(user.toJson());
+        await firebaseFirestore.collection("users").doc(cred.user!.uid).set(user.toJson());
       } else {
         Get.snackbar("Error  creating Account", "plaese enter all the fields");
       }
@@ -74,5 +94,12 @@ class AuthController extends GetxController {
     }catch(e){
       Get.snackbar("Error login", e.toString());
     }
+  }
+  void timer(String emailUser,String nameUser, String passeWord) async{
+    Timer(const Duration(seconds: 2),(){
+      nameUser = '';
+      emailUser = '';
+      passeWord = '';
+    });
   }
 }
